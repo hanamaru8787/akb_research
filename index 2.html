@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>競合店舗視察用チェックリスト</title>
+<style>
+  :root {
+    --bg-color: #f1f5f9;
+    --card-bg: #ffffff;
+    --primary: #2563eb;
+    --text: #0f172a;
+    --border: #cbd5e1;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-color); color: var(--text);
+    margin: 0; padding: 12px; padding-bottom: 120px;
+  }
+  h1 { font-size: 1.1rem; margin: 0 0 10px 0; text-align: center; color: #1e293b; }
+  
+  .tab-nav { display: flex; gap: 4px; margin-bottom: 12px; }
+  .tab-btn {
+    flex: 1; padding: 10px 2px; background: #e2e8f0; border: none;
+    border-radius: 6px; font-weight: bold; font-size: 0.72rem; color: #475569;
+  }
+  .tab-btn.active { background: var(--primary); color: #fff; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  
+  .card { background: var(--card-bg); border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+  .label { font-weight: bold; font-size: 0.85rem; margin: 10px 0 4px 0; display: block; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 2px; }
+  .label:first-child { margin-top: 0; }
+  .sub-label { font-size: 0.75rem; font-weight: bold; color: #475569; margin: 8px 0 4px 0; display: block; }
+  
+  .btn-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .btn-option {
+    flex: 1; min-width: 28%; padding: 10px 4px; border: 1px solid var(--border);
+    background: #f8fafc; border-radius: 6px; text-align: center; font-size: 0.75rem;
+    cursor: pointer; user-select: none; color: #334155;
+  }
+  .btn-option.selected { background: #dbeafe; border-color: var(--primary); color: var(--primary); font-weight: bold; }
+  
+  .radio-rating-group {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .radio-rating-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 0.8rem; font-weight: bold; color: #334155; cursor: pointer;
+  }
+  .radio-rating-item input[type="radio"] {
+    width: 18px; height: 18px; margin: 0; accent-color: var(--primary); cursor: pointer;
+  }
+
+  .time-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .time-row select { flex: 1; }
+
+  textarea, select, input[type="text"] {
+    width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 0.85rem; margin-bottom: 6px; background: #fff;
+  }
+  textarea { height: 60px; resize: vertical; line-height: 1.3; }
+
+  .action-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
+    padding: 8px 12px; border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100;
+  }
+  .action-row { display: flex; gap: 6px; }
+  .action-btn {
+    flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; font-size: 0.8rem;
+  }
+  .btn-save { background: #d97706; color: white; }
+  .btn-load { background: #0284c7; color: white; }
+  .btn-clear { background: #94a3b8; color: white; }
+  .btn-email { background: #10b981; color: white; }
+  .btn-copy { background: #475569; color: white; }
+</style>
+</head>
+<body>
+
+<h1>競合店舗視察用チェックリスト</h1>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab(0)">基本情報</button>
+  <button class="tab-btn" onclick="switchTab(1)">商品/陳列/什器</button>
+  <button class="tab-btn" onclick="switchTab(2)">価格/状態/客層</button>
+  <button class="tab-btn" onclick="switchTab(3)">CX/OMO/振り返り</button>
+</div>
+
+<!-- タブ1: 基本情報 / コンセプト -->
+<div class="tab-content active">
+  <div class="card">
+    <span class="label">■ 視察日時・環境ログ</span>
+    
+    <span class="sub-label">調査日</span>
+    <select id="singleDateSelect" onchange="updateDayType()"></select>
+
+    <span class="sub-label">曜日区分</span>
+    <div class="btn-group" data-id="dayType">
+      <div class="btn-option" onclick="selectSingle(this)">平日</div>
+      <div class="btn-option" onclick="selectSingle(this)">土日祝</div>
+    </div>
+
+    <span class="sub-label">入店時刻</span>
+    <div class="time-row">
+      <select id="inTimeHour"></select>
+      <select id="inTimeMin"></select>
+    </div>
+
+    <span class="sub-label">滞在時間</span>
+    <select id="stayMinutes"></select>
+
+    <span class="sub-label">調査者名</span>
+    <input type="text" id="inspectorName" placeholder="調査者名を入力">
+  </div>
+
+  <div class="card">
+    <span class="label">■ 基本情報・店舗コンセプト</span>
+    
+    <span class="sub-label">店舗名（選択すると入力内容がリセットされます）</span>
+    <select id="storeName" onchange="onStoreNameChange()">
+      <option value="BEEP">BEEP</option>
+      <option value="スーパーポテト">スーパーポテト</option>
+      <option value="レトロげーむキャンプ">レトロげーむキャンプ</option>
+      <option value="トレーダー">トレーダー</option>
+      <option value="駿河屋">駿河屋</option>
+      <option value="ハードオフ">ハードオフ</option>
+      <option value="その他">その他</option>
+    </select>
+    <input type="text" id="storeNameOther" placeholder="「その他」選択時の店舗名">
+
+    <span class="sub-label">立地・階数</span>
+    <div class="btn-group" data-id="location">
+      <div class="btn-option" onclick="selectSingle(this)">1F路面店</div>
+      <div class="btn-option" onclick="selectSingle(this)">2F以上空中階</div>
+      <div class="btn-option" onclick="selectSingle(this)">地下</div>
+      <div class="btn-option" onclick="selectSingle(this)">ビルマルチフロア</div>
+    </div>
+
+    <span class="sub-label">売場規模感</span>
+    <div class="btn-group" data-id="scale">
+      <div class="btn-option" onclick="selectSingle(this)">激狭・コンパクト</div>
+      <div class="btn-option" onclick="selectSingle(this)">こじんまり</div>
+      <div class="btn-option" onclick="selectSingle(this)">中規模・標準</div>
+      <div class="btn-option" onclick="selectSingle(this)">ゆったり・広大</div>
+    </div>
+    <input type="text" id="scale坪Memo" placeholder="推定坪数メモ（例：20坪程度など）">
+    
+    <span class="sub-label">店舗タイプ</span>
+    <div class="btn-group" data-id="storeType">
+      <div class="btn-option" onclick="selectSingle(this)">総合大型（全般）</div>
+      <div class="btn-option" onclick="selectSingle(this)">レトロゲーム専門店</div>
+      <div class="btn-option" onclick="selectSingle(this)">特定ハード・PCレトロ特化</div>
+      <div class="btn-option" onclick="selectSingle(this)">ジャンク・トレカ混在</div>
+      <div class="btn-option" onclick="selectSingle(this)">小型アキバ特化（観光系）</div>
+    </div>
+    <input type="text" id="storeTypeOther" placeholder="店舗タイプ「その他」記入欄">
+
+    <span class="sub-label">第一印象</span>
+    <div class="btn-group" data-id="firstImp">
+      <div class="btn-option" onclick="selectSingle(this)">整然・キレイ</div>
+      <div class="btn-option" onclick="selectSingle(this)">圧倒的商品量</div>
+      <div class="btn-option" onclick="selectSingle(this)">宝探し・雑多</div>
+      <div class="btn-option" onclick="selectSingle(this)">圧迫感・狭小</div>
+      <div class="btn-option" onclick="selectSingle(this)">観光地風</div>
+    </div>
+    <input type="text" id="firstImpOther" placeholder="第一印象「その他」記入欄">
+
+    <span class="sub-label">入口からみてパッと見でなんの店に見えるか（一言でいうと？）</span>
+    <textarea id="lookLikeConcept" placeholder="例：マニア向けレトロPCの秘密基地、海外観光客向けの映えスポット等"></textarea>
+
+    <span class="sub-label">狙っていそうな客層（複数選択可）</span>
+    <div class="btn-group" data-id="targetCustomer">
+      <div class="btn-option" onclick="toggleBtn(this)">マニア・コレクター</div>
+      <div class="btn-option" onclick="toggleBtn(this)">初心者・一般ライト層</div>
+      <div class="btn-option" onclick="toggleBtn(this)">観光・インバウンド</div>
+      <div class="btn-option" onclick="toggleBtn(this)">転売・業者</div>
+    </div>
+
+    <span class="sub-label">そう見えた理由（外観・看板・入口正面のディスプレイ等）</span>
+    <textarea id="targetReason" placeholder="例：店頭正面に特大ガラスケース、POP表記が英語メインなど"></textarea>
+
+    <span class="sub-label">この店とレトログの違い（1行メモ）</span>
+    <textarea id="diffRetrolog" placeholder="自店との差別化・ポジションの違い"></textarea>
+  </div>
+</div>
+
+<!-- タブ2: 商品/陳列/什器 -->
+<div class="tab-content">
+  <div class="card">
+    <span class="label">■ 商品構成</span>
+
+    <span class="sub-label">レトロゲーム取扱量</span>
+    <div class="btn-group" data-id="retroVol">
+      <div class="btn-option" onclick="selectSingle(this)">かなり多い（主力）</div>
+      <div class="btn-option" onclick="selectSingle(this)">普通（一定区画）</div>
+      <div class="btn-option" onclick="selectSingle(this)">少ない・ほぼ無し</div>
+    </div>
+    
+    <span class="sub-label">ソフトの量</span>
+    <div class="btn-group" data-id="softVol">
+      <div class="btn-option" onclick="selectSingle(this)">多い</div>
+      <div class="btn-option" onclick="selectSingle(this)">普通</div>
+      <div class="btn-option" onclick="selectSingle(this)">少ない</div>
+    </div>
+
+    <span class="sub-label">本体の量</span>
+    <div class="btn-group" data-id="bodyVol">
+      <div class="btn-option" onclick="selectSingle(this)">多い</div>
+      <div class="btn-option" onclick="selectSingle(this)">普通</div>
+      <div class="btn-option" onclick="selectSingle(this)">少ない</div>
+    </div>
+
+    <span class="sub-label">周辺機器の量</span>
+    <div class="btn-group" data-id="accVol">
+      <div class="btn-option" onclick="selectSingle(this)">多い</div>
+      <div class="btn-option" onclick="selectSingle(this)">普通</div>
+      <div class="btn-option" onclick="selectSingle(this)">少ない</div>
+    </div>
+
+    <span class="sub-label">主力ハード（複数選択可）</span>
+    <div class="btn-group" data-id="mainHard">
+      <div class="btn-option" onclick="toggleBtn(this)">FC/SFC</div>
+      <div class="btn-option" onclick="toggleBtn(this)">GB/GBA</div>
+      <div class="btn-option" onclick="toggleBtn(this)">N64/GC</div>
+      <div class="btn-option" onclick="toggleBtn(this)">DS/3DS</div>
+      <div class="btn-option" onclick="toggleBtn(this)">PS1〜3</div>
+      <div class="btn-option" onclick="toggleBtn(this)">PSP/Vita</div>
+      <div class="btn-option" onclick="toggleBtn(this)">PS4/5・Switch</div>
+      <div class="btn-option" onclick="toggleBtn(this)">PC98・88系</div>
+      <div class="btn-option" onclick="toggleBtn(this)">海外・アーケード</div>
+    </div>
+    <input type="text" id="mainHardOther" placeholder="主力ハード「その他」記入欄">
+
+    <span class="sub-label">特徴メモ</span>
+    <textarea id="featureMemo" placeholder="構成の偏りや目立つ配置など"></textarea>
+  </div>
+
+  <div class="card">
+    <span class="label">■ 陳列・什器</span>
+
+    <span class="sub-label">ソフトの陳列密度</span>
+    <div class="btn-group" data-id="softDisplay">
+      <div class="btn-option" onclick="selectSingle(this)">詰め込み（指入らない）</div>
+      <div class="btn-option" onclick="selectSingle(this)">標準（抜き差し可）</div>
+      <div class="btn-option" onclick="selectSingle(this)">余裕あり（面見せ多）</div>
+    </div>
+
+    <span class="sub-label">本体の陳列密度</span>
+    <div class="btn-group" data-id="bodyDisplay">
+      <div class="btn-option" onclick="selectSingle(this)">詰め込み</div>
+      <div class="btn-option" onclick="selectSingle(this)">標準</div>
+      <div class="btn-option" onclick="selectSingle(this)">余裕あり</div>
+    </div>
+
+    <span class="sub-label">什器タイプ（複数選択可）</span>
+    <div class="btn-group" data-id="fixtureType">
+      <div class="btn-option" onclick="toggleBtn(this)">高層スチール棚</div>
+      <div class="btn-option" onclick="toggleBtn(this)">ガラスケース</div>
+      <div class="btn-option" onclick="toggleBtn(this)">壁面ネット</div>
+      <div class="btn-option" onclick="toggleBtn(this)">吊り下げフック</div>
+      <div class="btn-option" onclick="toggleBtn(this)">ワゴン・カゴ</div>
+      <div class="btn-option" onclick="toggleBtn(this)">島什器・平置台</div>
+      <div class="btn-option" onclick="toggleBtn(this)">レジ前カウンター</div>
+    </div>
+    <input type="text" id="fixtureTypeOther" placeholder="什器タイプ「その他」記入欄">
+
+    <span class="sub-label">通路幅</span>
+    <div class="btn-group" data-id="aisleWidth">
+      <div class="btn-option" onclick="selectSingle(this)">狭い（擦れ違い不可）</div>
+      <div class="btn-option" onclick="selectSingle(this)">標準（ギリギリ可）</div>
+      <div class="btn-option" onclick="selectSingle(this)">広い（車椅子・カート可）</div>
+    </div>
+
+    <span class="sub-label">箱あり／裸の陳列分離度</span>
+    <div class="btn-group" data-id="boxBareSeparate">
+      <div class="btn-option" onclick="selectSingle(this)">完全分離（エリア別）</div>
+      <div class="btn-option" onclick="selectSingle(this)">同一棚に混在</div>
+      <div class="btn-option" onclick="selectSingle(this)">箱・ダミーのみ展示</div>
+      <div class="btn-option" onclick="selectSingle(this)">裸ソフト専門</div>
+    </div>
+
+    <span class="sub-label">裸ソフトの販売形態</span>
+    <div class="btn-group" data-id="bareStyle">
+      <div class="btn-option" onclick="selectSingle(this)">フック吊り・パック</div>
+      <div class="btn-option" onclick="selectSingle(this)">ワゴン・カゴ放り込み</div>
+      <div class="btn-option" onclick="selectSingle(this)">棚に直置き陳列</div>
+      <div class="btn-option" onclick="selectSingle(this)">裸ソフトの扱いなし</div>
+    </div>
+    <input type="text" id="bareStyleOther" placeholder="裸ソフト形態「その他」記入欄">
+
+    <span class="sub-label">気になった什器メモ</span>
+    <textarea id="fixtureMemo" placeholder="サイズ感や特殊な棚の使い方など"></textarea>
+  </div>
+</div>
+
+<!-- タブ3: 価格 / 状態 / 客層 -->
+<div class="tab-content">
+  <div class="card">
+    <span class="label">■ 価格・状態・保証・買取</span>
+
+    <span class="sub-label">低価格品（〜999円）の扱い</span>
+    <div class="btn-group" data-id="lowPrice">
+      <div class="btn-option" onclick="selectSingle(this)">専用棚</div>
+      <div class="btn-option" onclick="selectSingle(this)">ワゴン・カゴ</div>
+      <div class="btn-option" onclick="selectSingle(this)">通常棚最下段</div>
+      <div class="btn-option" onclick="selectSingle(this)">吊り下げパック</div>
+      <div class="btn-option" onclick="selectSingle(this)">無し</div>
+    </div>
+    <input type="text" id="lowPriceOther" placeholder="低価格品「その他」記入欄">
+
+    <span class="sub-label">商品の状態表記（箱・付属品）</span>
+    <div class="btn-group" data-id="itemCondition">
+      <div class="btn-option" onclick="selectSingle(this)">状態ランク/欠品が詳細</div>
+      <div class="btn-option" onclick="selectSingle(this)">基本情報のみ（箱説有無等）</div>
+      <div class="btn-option" onclick="selectSingle(this)">表記ほぼなし（要現物確認）</div>
+    </div>
+
+    <span class="sub-label">動作確認と案内表示</span>
+    <div class="btn-group" data-id="operationCheck">
+      <div class="btn-option" onclick="selectSingle(this)">確認済み（店内POP訴求）</div>
+      <div class="btn-option" onclick="selectSingle(this)">基本確認済み（表記なし）</div>
+      <div class="btn-option" onclick="selectSingle(this)">未確認・現状品メイン</div>
+      <div class="btn-option" onclick="selectSingle(this)">案内表記なし</div>
+    </div>
+
+    <span class="sub-label">現状品・ジャンク</span>
+    <div class="btn-group" data-id="junkStatus">
+      <div class="btn-option" onclick="selectSingle(this)">扱い多（特設あり）</div>
+      <div class="btn-option" onclick="selectSingle(this)">一部あり（棚混在）</div>
+      <div class="btn-option" onclick="selectSingle(this)">なし</div>
+    </div>
+    <input type="text" id="junkNote" placeholder="ジャンク表記方法（POPやシール文言等）">
+
+    <span class="sub-label">高額品の見せ方</span>
+    <div class="btn-group" data-id="highPrice">
+      <div class="btn-option" onclick="selectSingle(this)">集中ガラスケース</div>
+      <div class="btn-option" onclick="selectSingle(this)">レジ後ろ</div>
+      <div class="btn-option" onclick="selectSingle(this)">壁面最上段</div>
+      <div class="btn-option" onclick="selectSingle(this)">通常棚フック施錠</div>
+    </div>
+    <input type="text" id="highPriceOther" placeholder="高額品「その他」記入欄">
+
+    <span class="sub-label">保証・返品表示</span>
+    <div class="btn-group" data-id="warranty">
+      <div class="btn-option" onclick="selectSingle(this)">明確にデカデカと表示</div>
+      <div class="btn-option" onclick="selectSingle(this)">値札に小さく記載</div>
+      <div class="btn-option" onclick="selectSingle(this)">レジ横のみ</div>
+      <div class="btn-option" onclick="selectSingle(this)">表示なし</div>
+    </div>
+
+    <span class="sub-label">買取の有無・訴求</span>
+    <div class="btn-group" data-id="buyback">
+      <div class="btn-option" onclick="selectSingle(this)">強力訴求（POP・窓口あり）</div>
+      <div class="btn-option" onclick="selectSingle(this)">通常（レジ横POP程度）</div>
+      <div class="btn-option" onclick="selectSingle(this)">なし・見当たらない</div>
+    </div>
+
+    <span class="sub-label">買取動線</span>
+    <div class="btn-group" data-id="buybackFlow">
+      <div class="btn-option" onclick="selectSingle(this)">販売レジと完全に別</div>
+      <div class="btn-option" onclick="selectSingle(this)">販売レジと同じ</div>
+      <div class="btn-option" onclick="selectSingle(this)">なし・不明</div>
+    </div>
+
+    <span class="sub-label">宅配買取の案内</span>
+    <div class="btn-group" data-id="deliveryBuyback">
+      <div class="btn-option" onclick="selectSingle(this)">店内・レジに案内POPあり</div>
+      <div class="btn-option" onclick="selectSingle(this)">チラシ等の配布あり</div>
+      <div class="btn-option" onclick="selectSingle(this)">案内なし</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="label">■ 客層・インバウンド・多言語対応</span>
+
+    <span class="sub-label">客数・客層の印象</span>
+    <div class="btn-group" data-id="customerType">
+      <div class="btn-option" onclick="selectSingle(this)">マニア・コレクター系</div>
+      <div class="btn-option" onclick="selectSingle(this)">一般・ライト層</div>
+      <div class="btn-option" onclick="selectSingle(this)">観光客・インバウンド主</div>
+      <div class="btn-option" onclick="selectSingle(this)">混雑（滞留あり）</div>
+      <div class="btn-option" onclick="selectSingle(this)">空いている</div>
+    </div>
+
+    <span class="sub-label">滞在中の来店数</span>
+    <div class="btn-group" data-id="visitorCount">
+      <div class="btn-option" onclick="selectSingle(this)">0〜5人程度</div>
+      <div class="btn-option" onclick="selectSingle(this)">5〜10人程度</div>
+      <div class="btn-option" onclick="selectSingle(this)">10〜20人程度</div>
+      <div class="btn-option" onclick="selectSingle(this)">20人以上</div>
+    </div>
+
+    <span class="sub-label">レジ通過・購入客数</span>
+    <div class="btn-group" data-id="buyerCount">
+      <div class="btn-option" onclick="selectSingle(this)">0人</div>
+      <div class="btn-option" onclick="selectSingle(this)">1〜2人</div>
+      <div class="btn-option" onclick="selectSingle(this)">3〜5人</div>
+      <div class="btn-option" onclick="selectSingle(this)">6人以上</div>
+    </div>
+
+    <span class="sub-label">客層内訳メモ</span>
+    <textarea id="customerBreakdown" placeholder="性別、年齢層、国内客、インバウンド客等"></textarea>
+
+    <span class="sub-label">滞在中の買取利用客数</span>
+    <div class="btn-group" data-id="buybackCustomers">
+      <div class="btn-option" onclick="selectSingle(this)">0人</div>
+      <div class="btn-option" onclick="selectSingle(this)">1〜2人</div>
+      <div class="btn-option" onclick="selectSingle(this)">3人以上</div>
+    </div>
+
+    <span class="sub-label">インバウンド客の状況</span>
+    <div class="btn-group" data-id="inboundStatus">
+      <div class="btn-option" onclick="selectSingle(this)">非常に多い（大半外国人）</div>
+      <div class="btn-option" onclick="selectSingle(this)">チラホラいる</div>
+      <div class="btn-option" onclick="selectSingle(this)">ほぼいない</div>
+    </div>
+
+    <span class="sub-label">免税対応（Tax-Free）</span>
+    <div class="btn-group" data-id="taxFree">
+      <div class="btn-option" onclick="selectSingle(this)">対応あり（デカデカ掲示）</div>
+      <div class="btn-option" onclick="selectSingle(this)">対応あり（控えめ表示）</div>
+      <div class="btn-option" onclick="selectSingle(this)">対応なし</div>
+    </div>
+
+    <span class="sub-label">店内多言語対応</span>
+    <div class="btn-group" data-id="multiLang">
+      <div class="btn-option" onclick="selectSingle(this)">POP・板が多言語表記</div>
+      <div class="btn-option" onclick="selectSingle(this)">多言語スタッフ表示あり</div>
+      <div class="btn-option" onclick="selectSingle(this)">対応なし（日本語のみ）</div>
+    </div>
+
+    <span class="sub-label">海外向け決済手段</span>
+    <div class="btn-group" data-id="payment">
+      <div class="btn-option" onclick="selectSingle(this)">非常に豊富（銀聯/WeChat等）</div>
+      <div class="btn-option" onclick="selectSingle(this)">標準的（各種クレカのみ）</div>
+      <div class="btn-option" onclick="selectSingle(this)">現金・国内QRメイン</div>
+    </div>
+  </div>
+</div>
+
+<!-- タブ4: CX / OMO / 振り返り -->
+<div class="tab-content">
+  <div class="card">
+    <span class="label">■ オンライン連携・認知拠点（OMO・体験）</span>
+
+    <span class="sub-label">自社EC・他モール併売の案内</span>
+    <div class="btn-group" data-id="ecGuide">
+      <div class="btn-option" onclick="selectSingle(this)">「ネットでも購入可」表示あり</div>
+      <div class="btn-option" onclick="selectSingle(this)">EC在庫連動の案内あり</div>
+      <div class="btn-option" onclick="selectSingle(this)">案内なし</div>
+    </div>
+
+    <span class="sub-label">SNS・公式アプリ・LINE誘導</span>
+    <div class="btn-group" data-id="snsGuide">
+      <div class="btn-option" onclick="selectSingle(this)">登録特典あり（査定UP/割引等）</div>
+      <div class="btn-option" onclick="selectSingle(this)">案内POPのみ</div>
+      <div class="btn-option" onclick="selectSingle(this)">案内なし</div>
+    </div>
+
+    <span class="sub-label">撮影スポット・映え要素</span>
+    <div class="btn-group" data-id="photoSpot">
+      <div class="btn-option" onclick="selectSingle(this)">撮影OK表記/フォトスポットあり</div>
+      <div class="btn-option" onclick="selectSingle(this)">アイキャッチ展示あり</div>
+      <div class="btn-option" onclick="selectSingle(this)">なし</div>
+    </div>
+
+    <span class="sub-label">体験・試遊スペース</span>
+    <div class="btn-group" data-id="experienceSpace">
+      <div class="btn-option" onclick="selectSingle(this)">試遊台/プレイエリアあり</div>
+      <div class="btn-option" onclick="selectSingle(this)">ガチャ/オリジナル自販機/くじあり</div>
+      <div class="btn-option" onclick="selectSingle(this)">イベントスペースあり</div>
+      <div class="btn-option" onclick="selectSingle(this)">なし</div>
+    </div>
+
+    <span class="sub-label">OMO・体験メモ</span>
+    <textarea id="omoMemo" placeholder="例：LINE登録で買取10%UPの卓上POPあり、店頭のガチャ機は外国人で混雑など"></textarea>
+  </div>
+
+  <div class="card">
+    <span class="label">■ CX（顧客体験）評価</span>
+
+    <span class="sub-label">入りやすさ</span>
+    <div class="radio-rating-group">
+      <label class="radio-rating-item"><input type="radio" name="cx1" value="1">1</label>
+      <label class="radio-rating-item"><input type="radio" name="cx1" value="2">2</label>
+      <label class="radio-rating-item"><input type="radio" name="cx1" value="3">3</label>
+      <label class="radio-rating-item"><input type="radio" name="cx1" value="4">4</label>
+      <label class="radio-rating-item"><input type="radio" name="cx1" value="5">5</label>
+    </div>
+    <input type="text" id="cx1Reason" placeholder="入りやすさの理由">
+
+    <span class="sub-label">店の特徴の分かりやすさ</span>
+    <div class="radio-rating-group">
+      <label class="radio-rating-item"><input type="radio" name="cx2" value="1">1</label>
+      <label class="radio-rating-item"><input type="radio" name="cx2" value="2">2</label>
+      <label class="radio-rating-item"><input type="radio" name="cx2" value="3">3</label>
+      <label class="radio-rating-item"><input type="radio" name="cx2" value="4">4</label>
+      <label class="radio-rating-item"><input type="radio" name="cx2" value="5">5</label>
+    </div>
+
+    <span class="sub-label">探しやすさ</span>
+    <div class="radio-rating-group">
+      <label class="radio-rating-item"><input type="radio" name="cx3" value="1">1</label>
+      <label class="radio-rating-item"><input type="radio" name="cx3" value="2">2</label>
+      <label class="radio-rating-item"><input type="radio" name="cx3" value="3">3</label>
+      <label class="radio-rating-item"><input type="radio" name="cx3" value="4">4</label>
+      <label class="radio-rating-item"><input type="radio" name="cx3" value="5">5</label>
+    </div>
+    <input type="text" id="cx3Axis" placeholder="分類軸（五十音 / ハード別 / 価格別など）">
+
+    <span class="sub-label">商品の手に取りやすさ</span>
+    <div class="radio-rating-group">
+      <label class="radio-rating-item"><input type="radio" name="cx4" value="1">1</label>
+      <label class="radio-rating-item"><input type="radio" name="cx4" value="2">2</label>
+      <label class="radio-rating-item"><input type="radio" name="cx4" value="3">3</label>
+      <label class="radio-rating-item"><input type="radio" name="cx4" value="4">4</label>
+      <label class="radio-rating-item"><input type="radio" name="cx4" value="5">5</label>
+    </div>
+
+    <span class="sub-label">回遊しやすさ</span>
+    <div class="radio-rating-group">
+      <label class="radio-rating-item"><input type="radio" name="cx5" value="1">1</label>
+      <label class="radio-rating-item"><input type="radio" name="cx5" value="2">2</label>
+      <label class="radio-rating-item"><input type="radio" name="cx5" value="3">3</label>
+      <label class="radio-rating-item"><input type="radio" name="cx5" value="4">4</label>
+      <label class="radio-rating-item"><input type="radio" name="cx5" value="5">5</label>
+    </div>
+
+    <span class="sub-label">ワクワク感</span>
+    <div class="radio-rating-group">
+      <label class="radio-rating-item"><input type="radio" name="cx6" value="1">1</label>
+      <label class="radio-rating-item"><input type="radio" name="cx6" value="2">2</label>
+      <label class="radio-rating-item"><input type="radio" name="cx6" value="3">3</label>
+      <label class="radio-rating-item"><input type="radio" name="cx6" value="4">4</label>
+      <label class="radio-rating-item"><input type="radio" name="cx6" value="5">5</label>
+    </div>
+
+    <span class="sub-label">レジまでの導線</span>
+    <div class="radio-rating-group">
+      <label class="radio-rating-item"><input type="radio" name="cx7" value="1">1</label>
+      <label class="radio-rating-item"><input type="radio" name="cx7" value="2">2</label>
+      <label class="radio-rating-item"><input type="radio" name="cx7" value="3">3</label>
+      <label class="radio-rating-item"><input type="radio" name="cx7" value="4">4</label>
+      <label class="radio-rating-item"><input type="radio" name="cx7" value="5">5</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="label">■ 最後に（振り返り）</span>
+
+    <span class="sub-label">店舗の特徴・気付いた点</span>
+    <textarea id="refNotice" placeholder="全般的な感想や特徴"></textarea>
+
+    <span class="sub-label">真似したい</span>
+    <textarea id="refGood" placeholder="真似したい点"></textarea>
+
+    <span class="sub-label">真似したくない</span>
+    <textarea id="refBad" placeholder="真似したくない点"></textarea>
+
+    <span class="sub-label">レトログに採用できそうな点</span>
+    <textarea id="refUse" placeholder="自店に適用可能なポイント"></textarea>
+  </div>
+</div>
+
+<!-- 下部固定アクションバー -->
+<div class="action-bar">
+  <div class="action-row">
+    <button class="action-btn btn-save" onclick="saveDraft()">下書き保存</button>
+    <button class="action-btn btn-load" onclick="loadDraft()">下書き呼出</button>
+    <button class="action-btn btn-clear" onclick="clearForm(true)">クリア</button>
+  </div>
+  <div class="action-row">
+    <button class="action-btn btn-copy" onclick="copyData()">コピー</button>
+    <button class="action-btn btn-email" onclick="sendEmail()">メール作成</button>
+  </div>
+</div>
+
+<script>
+const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+
+window.onload = function() {
+  initDateDropdown();
+  initTimeOptions();
+};
+
+function initDateDropdown() {
+  const dateSel = document.getElementById('singleDateSelect');
+  dateSel.options.length = 0;
+
+  const today = new Date();
+  const todayY = today.getFullYear();
+  const todayM = today.getMonth() + 1;
+  const todayD = today.getDate();
+
+  const startDate = new Date();
+  startDate.setDate(today.getDate() - 30);
+
+  const endDate = new Date(2027, 11, 31);
+
+  let curDate = new Date(startDate);
+  let targetOptionIndex = 0;
+  let currentIndex = 0;
+
+  while (curDate <= endDate) {
+    const yVal = curDate.getFullYear();
+    const mVal = curDate.getMonth() + 1;
+    const dVal = curDate.getDate();
+
+    const yStr = String(yVal);
+    const mStr = String(mVal).padStart(2, '0');
+    const dStr = String(dVal).padStart(2, '0');
+    const dayName = weekDays[curDate.getDay()];
+
+    const formattedText = `${yStr}/${mStr}/${dStr} (${dayName})`;
+
+    const opt = document.createElement('option');
+    opt.value = formattedText;
+    opt.text = formattedText;
+    dateSel.appendChild(opt);
+
+    if (yVal === todayY && mVal === todayM && dVal === todayD) {
+      targetOptionIndex = currentIndex;
+    }
+
+    currentIndex++;
+    curDate.setDate(curDate.getDate() + 1);
+  }
+
+  dateSel.selectedIndex = targetOptionIndex;
+  updateDayType();
+}
+
+function updateDayType() {
+  const selectedText = document.getElementById('singleDateSelect').value;
+  const isWeekend = selectedText.includes('(土)') || selectedText.includes('(日)');
+
+  const group = document.querySelector('[data-id="dayType"]');
+  if (group) {
+    const options = group.querySelectorAll('.btn-option');
+    options.forEach(b => b.classList.remove('selected'));
+    if (isWeekend) {
+      options[1].classList.add('selected');
+    } else {
+      options[0].classList.add('selected');
+    }
+  }
+}
+
+function initTimeOptions() {
+  const hSel = document.getElementById('inTimeHour');
+  const mSel = document.getElementById('inTimeMin');
+  const staySel = document.getElementById('stayMinutes');
+
+  const now = new Date();
+  const curH = now.getHours();
+  const curM = now.getMinutes();
+
+  hSel.options.length = 0;
+  mSel.options.length = 0;
+  staySel.options.length = 0;
+
+  for (let h = 0; h < 24; h++) {
+    const val = String(h).padStart(2, '0');
+    const opt = new Option(h + '時', val);
+    if (h === curH) opt.selected = true;
+    hSel.add(opt);
+  }
+
+  for (let m = 0; m < 60; m++) {
+    const val = String(m).padStart(2, '0');
+    const opt = new Option(val + '分', val);
+    if (m === curM) opt.selected = true;
+    mSel.add(opt);
+  }
+
+  for (let min = 1; min <= 180; min++) {
+    const opt = new Option(min + '分', String(min));
+    if (min === 15) opt.selected = true;
+    staySel.add(opt);
+  }
+}
+
+function switchTab(index) {
+  const tabs = document.querySelectorAll('.tab-btn');
+  const contents = document.querySelectorAll('.tab-content');
+  tabs.forEach((t, i) => t.classList.toggle('active', i === index));
+  contents.forEach((c, i) => c.classList.toggle('active', i === index));
+}
+
+function toggleBtn(el) { el.classList.toggle('selected'); }
+
+function selectSingle(el) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.btn-option').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function onStoreNameChange() {
+  clearForm(false);
+}
+
+function clearForm(confirmNeeded = true) {
+  if (confirmNeeded) {
+    if (!confirm('画面の入力内容をクリアしますか？')) return;
+  }
+  document.querySelectorAll('.btn-option').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.querySelectorAll('textarea, input[type="text"]').forEach(i => {
+    if (i.id !== 'inspectorName') i.value = '';
+  });
+  initDateDropdown();
+}
+
+function getSelectedText(dataId, otherInputId = null) {
+  const group = document.querySelector(`[data-id="${dataId}"]`);
+  if (!group) return '未選択';
+  const selected = Array.from(group.querySelectorAll('.selected')).map(e => e.innerText);
+  let result = selected.length > 0 ? selected.join(', ') : '未選択';
+  if (otherInputId) {
+    const otherVal = document.getElementById(otherInputId).value;
+    if (otherVal) result += ` （その他内容：${otherVal}）`;
+  }
+  return result;
+}
+
+function getRadioValue(name) {
+  const checked = document.querySelector(`input[name="${name}"]:checked`);
+  return checked ? checked.value : '未選択';
+}
+
+function getFormDataObject() {
+  const btnGroups = {};
+  document.querySelectorAll('.btn-group').forEach(group => {
+    const id = group.getAttribute('data-id');
+    const selected = Array.from(group.querySelectorAll('.selected')).map(e => e.innerText);
+    btnGroups[id] = selected;
+  });
+
+  const radios = {};
+  ['cx1','cx2','cx3','cx4','cx5','cx6','cx7'].forEach(name => {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    radios[name] = checked ? checked.value : '';
+  });
+
+  const textIds = [
+    'singleDateSelect','inTimeHour','inTimeMin','stayMinutes','inspectorName',
+    'storeName','storeNameOther','scale坪Memo','storeTypeOther','firstImpOther',
+    'lookLikeConcept','targetReason','diffRetrolog',
+    'mainHardOther','featureMemo','fixtureTypeOther','bareStyleOther','fixtureMemo',
+    'lowPriceOther','junkNote','highPriceOther','customerBreakdown','omoMemo',
+    'cx1Reason','cx3Axis','refNotice','refGood','refBad','refUse'
+  ];
+  const inputs = {};
+  textIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) inputs[id] = el.value;
+  });
+
+  return { btnGroups, radios, inputs };
+}
+
+function getStoreDisplayName() {
+  const sel = document.getElementById('storeName').value;
+  if (sel === 'その他') {
+    const oth = document.getElementById('storeNameOther').value;
+    return oth ? `その他(${oth})` : 'その他店舗';
+  }
+  return sel;
+}
+
+function saveDraft() {
+  const data = getFormDataObject();
+  const store = getStoreDisplayName();
+  localStorage.setItem('akiba_inspection_draft_' + store, JSON.stringify(data));
+  alert(`「${store}」のデータを一時保存しました。`);
+}
+
+function loadDraft() {
+  const store = getStoreDisplayName();
+  const saved = localStorage.getItem('akiba_inspection_draft_' + store);
+  if (!saved) {
+    alert(`「${store}」の保存データが見つかりません。`);
+    return;
+  }
+
+  const data = JSON.parse(saved);
+
+  document.querySelectorAll('.btn-group').forEach(group => {
+    const id = group.getAttribute('data-id');
+    const selectedList = data.btnGroups[id] || [];
+    group.querySelectorAll('.btn-option').forEach(btn => {
+      if (selectedList.includes(btn.innerText)) {
+        btn.classList.add('selected');
+      } else {
+        btn.classList.remove('selected');
+      }
+    });
+  });
+
+  Object.keys(data.radios).forEach(name => {
+    const val = data.radios[name];
+    document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+      radio.checked = (radio.value === val);
+    });
+  });
+
+  Object.keys(data.inputs).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = data.inputs[id];
+  });
+
+  alert(`「${store}」の下書きを復元しました！`);
+}
+
+function buildReport() {
+  const store = getStoreDisplayName();
+  const dateStr = document.getElementById('singleDateSelect').value;
+  const inH = document.getElementById('inTimeHour').value;
+  const inM = document.getElementById('inTimeMin').value;
+  const stay = document.getElementById('stayMinutes').value;
+
+  return `【視察記録】${store}
+========================
+■ 視察日時・環境ログ
+・調査日時：${dateStr} ${inH}:${inM}〜 （滞在時間：約${stay}分 / ${getSelectedText('dayType')}）
+・調査者名：${document.getElementById('inspectorName').value || '未記入'}
+
+■ 基本情報・店舗コンセプト
+・店舗名：${store}
+・立地・階数：${getSelectedText('location')}
+・売場規模感：${getSelectedText('scale')} （坪数メモ：${document.getElementById('scale坪Memo').value || 'なし'}）
+・店舗タイプ：${getSelectedText('storeType', 'storeTypeOther')}
+・第一印象：${getSelectedText('firstImp', 'firstImpOther')}
+・パッと見の印象（一言）：
+${document.getElementById('lookLikeConcept').value || 'なし'}
+・狙っていそうな客層：${getSelectedText('targetCustomer')}
+・そう見えた理由：
+${document.getElementById('targetReason').value || 'なし'}
+・レトログとの違い：
+${document.getElementById('diffRetrolog').value || 'なし'}
+
+■ 商品構成
+・レトロゲーム取扱量：${getSelectedText('retroVol')}
+・ソフト量：${getSelectedText('softVol')} ／ 本体量：${getSelectedText('bodyVol')} ／ 周辺機器：${getSelectedText('accVol')}
+・主力ハード：${getSelectedText('mainHard', 'mainHardOther')}
+・特徴メモ：${document.getElementById('featureMemo').value || 'なし'}
+
+■ 陳列・什器
+・ソフト密度：${getSelectedText('softDisplay')}
+・本体密度：${getSelectedText('bodyDisplay')}
+・什器タイプ：${getSelectedText('fixtureType', 'fixtureTypeOther')}
+・通路幅：${getSelectedText('aisleWidth')}
+・箱あり/裸の分離度：${getSelectedText('boxBareSeparate')}
+・裸ソフトの販売形態：${getSelectedText('bareStyle', 'bareStyleOther')}
+・気になった什器メモ：${document.getElementById('fixtureMemo').value || 'なし'}
+
+■ 価格・状態・保証・買取
+・低価格品（〜999円）：${getSelectedText('lowPrice', 'lowPriceOther')}
+・状態表記（箱説）：${getSelectedText('itemCondition')}
+・動作確認案内：${getSelectedText('operationCheck')}
+・現状品・ジャンク：${getSelectedText('junkStatus')} （表記：${document.getElementById('junkNote').value || 'なし'}）
+・高額品の見せ方：${getSelectedText('highPrice', 'highPriceOther')}
+・保証・返品表示：${getSelectedText('warranty')}
+・買取訴求：${getSelectedText('buyback')}
+・買取動線：${getSelectedText('buybackFlow')}
+・宅配買取案内：${getSelectedText('deliveryBuyback')}
+
+■ 客層・インバウンド・多言語
+・客数・客層印象：${getSelectedText('customerType')}
+・滞在中の来店数：${getSelectedText('visitorCount')}
+・レジ通過・購入客数：${getSelectedText('buyerCount')}
+・客層内訳メモ：
+${document.getElementById('customerBreakdown').value || 'なし'}
+・滞在中の買取利用客数：${getSelectedText('buybackCustomers')}
+・インバウンド状況：${getSelectedText('inboundStatus')}
+・免税対応：${getSelectedText('taxFree')}
+・店内多言語対応：${getSelectedText('multiLang')}
+・海外決済手段：${getSelectedText('payment')}
+
+■ オンライン連携・認知拠点（OMO・体験）
+・自社EC・他モール併売案内：${getSelectedText('ecGuide')}
+・SNS・公式アプリ・LINE誘導：${getSelectedText('snsGuide')}
+・撮影スポット・映え要素：${getSelectedText('photoSpot')}
+・体験・試遊スペース：${getSelectedText('experienceSpace')}
+・OMO・体験メモ：
+${document.getElementById('omoMemo').value || 'なし'}
+
+■ CX（顧客体験）評価
+・入りやすさ：${getRadioValue('cx1')} / 5 （理由：${document.getElementById('cx1Reason').value || 'なし'}）
+・特徴の分かりやすさ：${getRadioValue('cx2')} / 5
+・探しやすさ：${getRadioValue('cx3')} / 5 （分類軸：${document.getElementById('cx3Axis').value || 'なし'}）
+・手に取りやすさ：${getRadioValue('cx4')} / 5
+・回遊しやすさ：${getRadioValue('cx5')} / 5
+・ワクワク感：${getRadioValue('cx6')} / 5
+・レジまでの導線：${getRadioValue('cx7')} / 5
+
+■ 最後に（振り返り）
+・店舗の特徴・気付いた点：
+${document.getElementById('refNotice').value || 'なし'}
+・真似したい：
+${document.getElementById('refGood').value || 'なし'}
+・真似したくない：
+${document.getElementById('refBad').value || 'なし'}
+・レトログに採用できそうな点：
+${document.getElementById('refUse').value || 'なし'}
+========================`;
+}
+
+function executeCopy() {
+  const text = buildReport();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return Promise.resolve();
+  }
+}
+
+function copyData() {
+  executeCopy().then(() => {
+    alert('記録テキストをコピーしました！\nメモ帳やチャット等に貼り付けできます。');
+  }).catch(() => {
+    alert('コピーに失敗しました。');
+  });
+}
+
+function sendEmail() {
+  const text = buildReport();
+  const store = getStoreDisplayName();
+  const subject = encodeURI(`【秋葉原視察】${store}`);
+  const body = encodeURI(text);
+  
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  executeCopy();
+}
+</script>
+
+</body>
+</html>
